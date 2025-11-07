@@ -52,6 +52,8 @@ export function AppointmentModal({
   servicioId,
   clienteId,
   initialAppointment,
+  hours,
+  slotMinutes,
   isEditing = false,
   appointmentId,
 }: AppointmentModalProps) {
