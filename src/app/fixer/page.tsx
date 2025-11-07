@@ -15,7 +15,7 @@ interface Cita {
 }
 
 export default function FixerScreen() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const FIXER_ID = "690c29d00c736bec44e473e4";
 
   const [citas, setCitas] = useState<Cita[]>([]);
