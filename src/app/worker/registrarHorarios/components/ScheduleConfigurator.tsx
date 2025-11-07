@@ -290,17 +290,17 @@ export default function ScheduleConfigurator() {
         };
         let payload = {};
         if (activeTab === "weekly") {
-           payload = {
-              modo: "semanal",
-              dias: dataToSave.selectedDays.map(nombreDia => ({
-                dia: diasMap[nombreDia],
-                activo: true, // como viene en selectedDays, asumimos que está activo
-                rangos: dataToSave.ranges.map(r => ({
-                  inicio: r.start,
-                  fin: r.end,
-                })),
-              })),
-            };
+        payload = {
+            modo: "semanal",
+            dias: weeklySchedule.selectedDays.map(nombreDia => ({
+            dia: diasMap[nombreDia],
+            activo: true,
+            rangos: weeklySchedule.ranges.map(r => ({
+                inicio: r.start,
+                fin: r.end,
+            })),
+            })),
+        };
         }else{
           payload = {
           modo: "diaria",
@@ -309,7 +309,7 @@ export default function ScheduleConfigurator() {
             .map(([nombreDia, data]) => ({
               dia: diasMap[nombreDia],
               activo: data.enabled,
-              rangos: data.ranges.map(r => ({
+              rangos: data.ranges.map((r: { start: any; end: any; }) => ({
                 inicio: r.start,
                 fin: r.end,
               })),
