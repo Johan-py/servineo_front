@@ -33,7 +33,7 @@ export default function EditAppointmentModal({
   proveedorId,
   isDemo
 }: EditAppointmentModalProps) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     // Crear la fecha a mediodía para evitar problemas con zonas horarias
     const fecha = new Date(cita.fecha + 'T12:00:00');

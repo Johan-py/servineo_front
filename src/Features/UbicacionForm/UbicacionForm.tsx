@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { MapPin, Search } from 'lucide-react';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Interfaz para datos de ubicación
 interface LocationFormData {
@@ -160,7 +161,7 @@ export default function UbicacionForm() {
         estado: "pendiente",
       };
 
-      const response = await fetch("http://localhost:5000/api/devcode/citas", {
+      const response = await fetch( `${API_URL}/api/devcode/citas `, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(citaPayload),

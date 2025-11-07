@@ -33,7 +33,7 @@ const CitasAgendadas = () => {
 
   // cliente fijo en tu código original
   const clienteId = "690c2c510c736bec44e473e9";
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchCitas = async () => {
     setLoading(true);
