@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { MapPin, Search } from 'lucide-react';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface LocationFormData {
   address: string;

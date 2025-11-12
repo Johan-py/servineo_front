@@ -1,4 +1,5 @@
 'use client';
+'use client';
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -7,39 +8,37 @@ import {
   DayName,
   DAYS_OF_WEEK,
   ScheduleErrors,
-  WeeklyUniformSchedule, 
+  WeeklyUniformSchedule,
   DaySchedule
 } from '../types'; 
+
 
 const PROVEEDOR_ID = "690c29d00c736bec44e473e4";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// --- Lógica de Utilidad ---
+// --- Utilidades ---
 const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
 };
 
 const validateTimeRange = (start: string, end: string): boolean => {
-    return timeToMinutes(end) > timeToMinutes(start);
+  return timeToMinutes(end) > timeToMinutes(start);
 };
 
 const validateNoOverlap = (ranges: TimeRange[]): boolean => {
-    if (ranges.length <= 1) return true;
+  if (ranges.length <= 1) return true;
+  const minuteRanges = ranges
+    .map(r => ({ start: timeToMinutes(r.start), end: timeToMinutes(r.end) }))
+    .sort((a, b) => a.start - b.start);
 
-    const minuteRanges = ranges
-        .map(r => ({ start: timeToMinutes(r.start), end: timeToMinutes(r.end) }))
-        .sort((a, b) => a.start - b.start);
-
-    for (let i = 0; i < minuteRanges.length - 1; i++) {
-        if (minuteRanges[i].end > minuteRanges[i + 1].start) {
-            return false;
-        }
-    }
-    return true;
+  for (let i = 0; i < minuteRanges.length - 1; i++) {
+    if (minuteRanges[i].end > minuteRanges[i + 1].start) return false;
+  }
+  return true;
 };
 
-// --- Definición del Estado Inicial ---
+// --- Estado Inicial ---
 const initialDayConfig: DaySchedule = { enabled: false, ranges: [{ start: '09:00', end: '18:00' }] };
 const initialSchedule: ScheduleConfig = DAYS_OF_WEEK.reduce((acc, day) => {
   acc[day] = { ...initialDayConfig }; // copia para evitar referencia compartida
@@ -154,9 +153,9 @@ export default function ScheduleConfigurator() {
             }
         }
 
-        setErrors(newErrors);
-        return isValid;
-    }, [schedule, weeklySchedule, activeTab]);
+    setErrors(newErrors);
+    return isValid;
+  }, [schedule, weeklySchedule, activeTab]);
 
     // --- Cancelar ---
     const handleCancel = () => {
@@ -265,7 +264,7 @@ export default function ScheduleConfigurator() {
                     {isDayError && <p className="mt-2 text-sm text-red-600 font-medium">{errors['weekly-days']}</p>}
                 </div>
 
-                <hr className="my-4" />
+      <hr className="my-4" />
 
                 {/* Rango de Horario */}
                 <div>
@@ -417,3 +416,4 @@ export default function ScheduleConfigurator() {
         </main>
     );
 }
+

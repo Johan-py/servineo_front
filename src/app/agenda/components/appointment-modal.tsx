@@ -23,13 +23,16 @@ interface AppointmentModalProps {
   providerId: string;
   servicioId: string;
   clienteId: string;
+  slotMinutes?: number; // opcional
+  hours?: string;       // ✅ agregar aquí
   initialAppointment?: any;
   isEditing?: boolean;
   appointmentId?: string;
-  slotMinutes?: number;
-  hours?: string;
 
 }
+
+
+
 
 const APPOINTMENT_STATES = {
   unavailable: { label: "No disponible", color: "bg-gray-300" },
@@ -50,6 +53,8 @@ export function AppointmentModal({
   servicioId,
   clienteId,
   initialAppointment,
+  hours,
+  slotMinutes,
   isEditing = false,
   appointmentId,
 }: AppointmentModalProps) {
