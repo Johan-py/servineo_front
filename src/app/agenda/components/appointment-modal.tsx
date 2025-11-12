@@ -28,6 +28,7 @@ interface AppointmentModalProps {
   initialAppointment?: any;
   isEditing?: boolean;
   appointmentId?: string;
+
 }
 
 
