@@ -1,69 +1,75 @@
-"use client";
-import { Dialog } from "@/app/agenda/components/ui/dialog";
-import { AlertTriangle } from "lucide-react";
-
-interface ConfirmationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void | Promise<void>;
-  title: string;
-  message: string;
-}
-
-export default function ConfirmationModal({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  message
-}: ConfirmationModalProps) {
-
-  const handleConfirm = async () => {
-    try {
-      await onConfirm();
-    } catch (e) {
-      console.error("Error en confirmación:", e);
-    } finally {
-      onClose(); // cerrar modal después de que termine onConfirm
-    }
-  };
-
+import Mapa from "./components/mapa/MapaWrapper";
+import CarruselOfertas from "./components/CarruselOfertas/CarruselOfertas";
+import HomeFixer from "./components/ListaCategorias/HomeFixer";
+// import type { Categoria } from "./components/ListaCategorias/tipos"; // ← no se usa
+import Footer from "./components/Footer/Footer";
+import CarruselInspirador from "./components/CarruselInspirador/CarruselInspirador";
+import Link from "next/link";
+import categorias, { type CategoriaBase } from "./components/data/categoriasData";
+export default function Home() {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* Fondo oscuro */}
-      <div className="fixed inset-0 z-50 bg-black/50" />
+    <main>
+      {/* Hero / inspiración */}
+      <section className="my-5">
+        <CarruselInspirador />
+      </section>
 
-      {/* Contenedor del modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-lg">
-          
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
-            <h2 className="text-xl font-semibold">{title}</h2>
-          </div>
-          
-          {/* Mensaje */}
-          <p className="text-gray-600 mb-6">{message}</p>
-          
-          {/* Botones */}
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-            >
-              Confirmar
-            </button>
-          </div>
+      {/* Mapa */}
+      <section id="mapa" className="my-10">
+        <Mapa />
+      </section>
 
+      {/* Servicios / categorías */}
+      <section id="servicios" className="my-5 w-full">
+        {/* HomeFixer solo necesita id, titulo, descripcion, icono */}
+        <HomeFixer categorias={categorias as CategoriaBase[]} />
+      </section>
+
+      {/* Trabajos recientes */}
+      <section id="trabajos-recientes" className="my-5 w-full">
+        <CarruselOfertas />
+      </section>
+
+      {/* Acciones rápidas (contenido que tenías en el segundo Home) */}
+      <section className="my-10">
+        <div className="min-h-[0] flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-2xl font-bold text-center mb-6">Acciones rápidas</h2>
+
+            <div className="flex flex-col gap-4">
+              <Link
+                href="/register_a_job"
+                className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-red-600 transition-colors text-center"
+              >
+                Agregar Disponibilidad
+              </Link>
+
+              <Link
+                href="/agenda_proveedor"
+                className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-cyan-600 transition-colors text-center"
+              >
+                Agendar tu servicio
+              </Link>
+
+              <Link
+                href="/epic_VisualizadorDeTrabajosAgendadosVistaProveedor"
+                className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors text-center"
+              >
+                Trabajos Agendados (Vista-Proveedor)
+              </Link>
+
+              <Link
+                href="/epic_VisualizadorDeTrabajosAgendadosVistaCliente"
+                className="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors text-center"
+              >
+                Mis Trabajos (Vista-Cliente)
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
-    </Dialog>
+      </section>
+
+      <Footer />
+    </main>
   );
 }

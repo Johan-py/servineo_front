@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/context/AuthProvider";
 import { Calendar } from "./ui/calendar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -19,20 +20,18 @@ interface LocationFormProps {
 interface AppointmentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAppointmentSave?: (updatedAppointment: any) => void;
   patientName: string;
   providerId: string;
   servicioId: string;
   clienteId: string;
-  slotMinutes?: number; // opcional
-  hours?: string;       // ✅ agregar aquí
   initialAppointment?: any;
   isEditing?: boolean;
   appointmentId?: string;
+  slotMinutes?: number;
+  hours?: string;
 
 }
-
-
-
 
 const APPOINTMENT_STATES = {
   unavailable: { label: "No disponible", color: "bg-gray-300" },
@@ -48,17 +47,17 @@ const toYYYYMMDD = (d: Date) =>
 export function AppointmentModal({
   open,
   onOpenChange,
+  onAppointmentSave,
   patientName = "Juan Pérez",
   providerId,
   servicioId,
   clienteId,
   initialAppointment,
-  hours,
-  slotMinutes,
   isEditing = false,
   appointmentId,
 }: AppointmentModalProps) {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const { token } = useAuth();
 
   // Fecha / hora
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -78,6 +77,9 @@ export function AppointmentModal({
 
   // Confirmación
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationTitle, setConfirmationTitle] = useState<string | undefined>(undefined);
+  const [confirmationMessage, setConfirmationMessage] = useState<string | undefined>(undefined);
+  const [confirmationSuccess, setConfirmationSuccess] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
 
   // Días feriados
@@ -111,7 +113,6 @@ export function AppointmentModal({
       console.error("Error cargando citas del proveedor:", error);
     }
   }
-
 
   // ---- UI helpers ----
   const formatDateForSummary = (date: Date) =>
@@ -272,64 +273,217 @@ export function AppointmentModal({
     return bookedDays.includes(dateStr);
   };
 
-  const handleConfirm = async () => {
-    if (!API_URL) return alert("Falta NEXT_PUBLIC_API_URL en .env.local");
-    if (!selectedDate || !selectedSlot) return alert("Selecciona fecha y horario");
-    if (!locationData) return alert("Completa los datos de ubicación");
+    const handleConfirm = async () => {
 
-    try {
-      setSaving(true);
-      const formatHour = (iso: string) => {
-        const date = new Date(iso);
-        return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-      };
+      if (!API_URL) return alert("Falta NEXT_PUBLIC_API_URL en .env.local");
 
-      const payload = {
-        proveedorId: providerId,
-        servicioId,
-        clienteId,
-        fecha: toYYYYMMDD(selectedDate),
-        horario: {
-          inicio: formatHour(selectedSlot.startISO),
-          fin: formatHour(selectedSlot.endISO),
-        },
-        ubicacion: locationData,
-        estado: "pendiente",
-      };
+      if (!selectedDate || !selectedSlot) return alert("Selecciona fecha y horario");
 
-      let url = `${API_URL}/api/devcode/citas`;
-      let method = "POST";
+      if (!locationData) return alert("Completa los datos de ubicación");
 
-      if (isEditing && appointmentId) {
-        url = `${API_URL}/api/devcode/citas/${appointmentId}`;
-        method = "PUT";
+  
+
+      try {
+
+        setSaving(true);
+
+        const formatHour = (iso: string) => {
+
+          const date = new Date(iso);
+
+          return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+
+        };
+
+  
+
+        const payload = {
+
+          proveedorId: providerId,
+
+          servicioId,
+
+          clienteId,
+
+          fecha: toYYYYMMDD(selectedDate),
+
+          horario: {
+
+            inicio: formatHour(selectedSlot.startISO),
+
+            fin: formatHour(selectedSlot.endISO),
+
+          },
+
+          ubicacion: locationData,
+
+          estado: "pendiente",
+
+        };
+
+  
+
+        let url = `${API_URL}/api/devcode/citas`;
+
+        let method = "POST";
+
+  
+
+        if (isEditing && appointmentId) {
+
+          url = `${API_URL}/api/devcode/citas/${appointmentId}`;
+
+          method = "PUT";
+
+        }
+
+  
+
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  
+
+        const res = await fetch(url, {
+
+          method,
+
+          headers,
+
+          body: JSON.stringify(payload),
+
+        });
+
+  
+
+        const body = await res.json().catch(() => ({}));
+
+  
+
+        // ---- START DEBUGGING LOGS ----
+
+        console.log("Respuesta completa del backend:", body);
+
+        console.log("Token de autenticación presente:", token ? 'Sí' : 'No');
+
+        // ---- END DEBUGGING LOGS ----
+
+  
+
+        if (!res.ok) {
+
+          if (res.status === 409) return alert(body?.message || "Horario no disponible.");
+
+          return alert(body?.message || `Error HTTP ${res.status}`);
+
+        }
+
+  
+
+        // Check for the googleSync object at the root or inside a 'data' property
+
+        const googleSync = body?.googleSync || body?.data?.googleSync;
+
+        console.log("Objeto googleSync derivado:", googleSync); // More logging
+
+  
+
+        let googleSyncMessage: React.ReactNode = null;
+
+  
+
+        if (googleSync?.attempted && token) {
+
+          if (googleSync.success) {
+
+            googleSyncMessage = (
+
+              <div className="mt-4 p-3 bg-green-100 border border-green-200 rounded-lg text-green-800 text-sm">
+
+                Se actualizó correctamente en Google Calendar.
+
+              </div>
+
+            );
+
+          } else {
+
+            const errMsg = googleSync.error || (googleSync.details && JSON.stringify(googleSync.details)) || 'Error desconocido';
+
+            googleSyncMessage = (
+
+              <div className="mt-4 p-3 bg-red-100 border border-red-200 rounded-lg text-red-700 text-sm">
+
+                <p className="font-bold">Error sincronizando con Google Calendar:</p>
+
+                <p className="mt-1">{errMsg}</p>
+
+              </div>
+
+            );
+
+          }
+
+        }
+
+  
+
+        const baseMessage = isEditing ? "La cita se actualizó correctamente." : "Tu cita se ha creado correctamente.";
+
+        const finalMessage: React.ReactNode = (
+
+          <>
+
+            <p>{baseMessage}</p>
+
+            {googleSyncMessage}
+
+          </>
+
+        );
+
+  
+
+        setConfirmationTitle(isEditing ? "Cita actualizada" : "Cita creada");
+
+        setConfirmationMessage(finalMessage);
+
+        setConfirmationSuccess(true);
+
+        setShowConfirmationModal(true);
+
+  
+
+        if (onAppointmentSave && isEditing) {
+
+          onAppointmentSave(body.data || body);
+
+        }
+
+  
+
+        onOpenChange(false);
+
+        setSelectedTime(null);
+
+        setSelectedSlot(null);
+
+  
+
+      } catch (err) {
+
+        console.error(err);
+
+        alert("No se pudo crear la cita");
+
+      } finally {
+
+        setSaving(false);
+
       }
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const body = await res.json().catch(() => ({}));
-      
-      if (!res.ok) {
-        if (res.status === 409) return alert(body?.message || "Horario no disponible.");
-        return alert(body?.message || `Error HTTP ${res.status}`);
-      }
-
-      setShowConfirmationModal(true);
-      onOpenChange(false);
-      setSelectedTime(null);
-      setSelectedSlot(null);
-
-    } catch (err) {
-      console.error(err);
-      alert("No se pudo crear la cita");
-    } finally {
-      setSaving(false);
-    }
-  };
+    };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -578,6 +732,9 @@ export function AppointmentModal({
       <ModalConfirmacion 
         isOpen={showConfirmationModal} 
         onClose={() => setShowConfirmationModal(false)} 
+        title={confirmationTitle}
+        message={confirmationMessage}
+        success={confirmationSuccess}
       />
     </Dialog>
   );

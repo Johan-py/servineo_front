@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppointmentModal from "./appointment-modal";
+import { useCurrentClienteId } from "@/config/userConfig";
 
 interface Cita {
   _id: string;
@@ -31,34 +32,46 @@ const CitasAgendadas = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // cliente fijo en tu código original
-  const clienteId = "690c2c510c736bec44e473e9";
+  // cliente del usuario actual (centralizado en userConfig)
+  const clienteId = useCurrentClienteId();
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  const fetchCitas = async () => {
+  const fetchCitas = React.useCallback(async () => {
+    if (!clienteId) {
+      setCitas([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`${API_BASE}/api/devcode/citas/cliente/${clienteId}`);
-      if (!res.ok) throw new Error("Error al obtener citas");
+      if (!res.ok) {
+        throw new Error(`Error al obtener citas: ${res.statusText}`);
+      }
 
       const json = await res.json();
+      
+      // La API puede devolver { success: true, data: [...] } o solo [...]
+      const citasData = json.data || (Array.isArray(json) ? json : []);
+      setCitas(citasData);
 
-      if (!json.success) throw new Error(json.error || "Error al obtener citas");
+      if (json.success === false || json.error) {
+        throw new Error(json.error || "Ocurrió un error en la respuesta de la API");
+      }
 
-      setCitas(json.data); // ✅ aquí citas es un array
     } catch (err: any) {
       setError(err.message || "Error desconocido");
+      setCitas([]); // Limpiar citas en caso de error
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [clienteId, API_BASE]);
 
   useEffect(() => {
     fetchCitas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchCitas]);
 
   // Estado para editar
   const [modalOpen, setModalOpen] = useState(false);
@@ -156,12 +169,17 @@ const CitasAgendadas = () => {
       {modalOpen && (
         <AppointmentModal
           open={modalOpen}
+          onAppointmentSave={(updatedCita) => {
+            setCitas((prevCitas) =>
+              prevCitas.map((cita) =>
+                cita._id === updatedCita._id ? { ...cita, ...updatedCita } : cita
+              )
+            );
+          }}
           onOpenChange={(open) => {
             setModalOpen(open);
             if (!open) {
               setSelectedCita(null);
-              // refrescar lista después de cerrar (posible cambio)
-              fetchCitas();
             }
           }}
           patientName={selectedCita?.proveedorId?.nombre ?? "Proveedor"}

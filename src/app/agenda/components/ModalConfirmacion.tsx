@@ -10,7 +10,7 @@ interface ModalConfirmacionProps {
   onClose: () => void;
   onConfirm?: () => void | Promise<void>; // opcional, para confirmaciones tipo "cancelar"
   title?: string;   // título del modal
-  message?: string; // mensaje del modal
+  message?: React.ReactNode; // mensaje del modal
   success?: boolean; // si es true, usamos estilo de éxito; si false, estilo de alerta
 }
 
@@ -55,7 +55,9 @@ export default function ModalConfirmacion({
         </div>
 
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
-        <p className="text-gray-600 mb-6">{message}</p>
+        <div className="text-gray-600 mb-6 text-left">
+          {message}
+        </div>
 
         <Button
           className={`${success ? "bg-blue-600 hover:bg-blue-700" : "bg-red-600 hover:bg-red-700"} w-full`}
