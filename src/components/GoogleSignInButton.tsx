@@ -22,7 +22,7 @@ export default function GoogleSignInButton() {
       setRedirecting(true);
       // Solicitar la URL de login a backend (puerto 5000)
       // Incluir credenciales para que el backend pueda enviar la cookie 'oauth_state'
-      const res = await fetch("http://localhost:5000/api/devcode/auth/google-login", {
+      const res = await fetch("https://servineo-back.onrender.com/api/devcode/auth/google-login", {
         method: "GET",
         credentials: "include",
       });
